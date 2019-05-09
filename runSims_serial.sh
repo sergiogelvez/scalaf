@@ -1,45 +1,47 @@
 #!/bin/bash
 
-# Acá asigno las variables, para que sea más facil editar los valores
-NUM_SIMS=10
-ARCH_EXEC=scalaf_serial_imp
+# Simulation Parameters
+eruption_temperature=1500
+eruption_rate=0.15
+cell_width=1
+map_rows=1024
+map_columns=1024
+number_of_craters=1
+time_steps=10000
+
+# Config Parameters
+ARCH_EXEC=build/scalaf
+ARCH_OUTPUT=output/
 ARCH_ALTITUD=altitudesMil.csv
-ARCH_CRATER=aCraterMil
-TEMP_ERUP=1500
-TASA_ERUP=0.15
-WIDTH=1
-FILAS=1024
-COLS=1024
-RAIZ=serial_imp_3600_fullmesh
-NUM_CRATER=1
-PASOS_TIEMPO=3600
+ARCH_CRATER=crater_location
+BASENAME=${map_rows}x${map_columns}_EXP
+number_of_repetitions=1
+
 HILOS_BLOQUE=171
-BLOQUES=$(($FILAS/$HILOS_BLOQUE))
+BLOQUES=$(($map_rows/$HILOS_BLOQUE))
 
 clear
-echo "numero de hilos $HILOS_BLOQUE, numero de bloques $BLOQUES"
-echo "Iniciando iteraciones"
-for i in `seq 0 $((${NUM_SIMS}-1))`;
+printf "Número de hilos $HILOS_BLOQUE, número de bloques $BLOQUES"
+printf "\nIniciando iteraciones"
+for i in `seq 0 $((${number_of_repetitions} -1))`;
 	do
-	# Nombre de salida, con el nombre correcto
-	NOMBRE=${RAIZ}_EXP_${i}
-	ARCH_SALIDA=${NOMBRE}
-	echo ""
-	echo "Iteración $i"
-	echo "$ARCH_SALIDA es el nombre de la salida"
-	ARCH_ERROR=${NOMBRE}_ERR
-	echo "$ARCH_ERROR es el nombre de la salida"
-	echo "time ./$ARCH_EXEC -t $TEMP_ERUP -v $TASA_ERUP -w $WIDTH -s $ARCH_CRATER -a $ARCH_ALTITUD -r $FILAS -c $COLS -p $NUM_CRATER -e $NOMBRE -n $PASOS_TIEMPO > $ARCH_SALIDA 2 > $ARCH_ERROR"
-	time ./$ARCH_EXEC -t $TEMP_ERUP -v $TASA_ERUP -w $WIDTH -s $ARCH_CRATER -a $ARCH_ALTITUD -r $FILAS -c $COLS -p $NUM_CRATER -e $NOMBRE -n $PASOS_TIEMPO > $ARCH_SALIDA
-	# acá tambien tiene que ir el comando de comprimir el resultado
-	tar -zcvpf ${NOMBRE}.tgz ${NOMBRE}_*
-	mkdir /sergio_tmp/backups
-    mv ${NOMBRE}.tgz /sergio_tmp/backups
-	echo "Archivo copiado en backups"
-	rm ${NOMBRE}_*
-	echo "Archivos limpiados"
-	# y luego copiar el archivo en otra carpeta
-	#time ./$ARCH_EXEC -t $TEMP_ERUP -v $TASA_ERUP -w $WIDTH -s $ARCH_CRATER -a $ARCH_ALTITUD -r $FILAS -c $COLS -p $NUM_CRATER -e $NOMBRE -n $NUM_CRATER -b $HILOS_BLOQUE > $ARCH_SALIDA 2 > $ARCH_ERROR
+	ITERATION_NAME=${BASENAME}_${i}
+	ARCH_SALIDA=${ITERATION_NAME}
+	ARCH_ERROR=${ITERATION_NAME}_ERR
+	printf "\nIteración $i"
+	printf "\nOUTPUT_FILE: $ARCH_SALIDA"
+	printf "\nERROR_FILE: $ARCH_ERROR"
+	
+	printf "\ntime ./$ARCH_EXEC -t $eruption_temperature -v $eruption_rate -w $cell_width -s $ARCH_CRATER -a $ARCH_ALTITUD -r $map_rows -c $map_columns -p $number_of_craters -e $ITERATION_NAME -n $time_steps > $ARCH_SALIDA 2 > $ARCH_ERROR"
+	time ./$ARCH_EXEC -t $eruption_temperature -v $eruption_rate -w $cell_width -s $ARCH_CRATER -a $ARCH_ALTITUD -r $map_rows -c $map_columns -p $number_of_craters -e $ITERATION_NAME -n $time_steps > $ARCH_SALIDA
+	
+	# Comprimir resultados y mover a directorio de salida
+	tar -zcvpf ${ITERATION_NAME}.tgz ${ITERATION_NAME}_*
+	mkdir -p ${ARCH_OUTPUT}
+    mv ${ITERATION_NAME}* ${ARCH_OUTPUT}
+	printf "\nArchivo copiado en ${ARCH_OUTPUT}"
+	rm ${ITERATION_NAME}_*
+	printf "\nArchivos limpiados"
 	done
-echo ""
-echo "Fin de las iteraciones"
+
+printf "\nFin de las iteraciones"
