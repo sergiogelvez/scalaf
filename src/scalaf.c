@@ -39,48 +39,35 @@ int placeCraters(celda *A, const point2D *P, int totalRows, int totalColumns,
   }
 }
 
-// función para extraer las parejas de x y y de los puntos en
-// un archivo de texto plano.  X es fila y Y columna.
-int leerArchivoPuntos(char *path, int filas, point2D *puntos) {
-  // funcion para leer los datos de los puntos donde hay un crater
-  size_t sizep;
-  char buff[1000];
-  char *tok;
-  long int i, j;
+// Función para leer puntos en 2D desde un archivo de texto plano.
+// X para Filas, Y para Columnas.
+int readCratersPositionFile(char *path, int numberOfCraters,
+                            point2D *craterPositions) {
+  FILE *cratersPositionFile;
+  char lineBuffer[1000];
+  char *token;
   int error;
-  double elem;
-  FILE *datosAltitud;
-  sizep = strlen(path);
-  if (sizep != 0) {
-    printf(
-        "\nIntentando leer el archivo con las posiciones de los cráteres...");
-    printf("Archivo a leer: %s\n", path);
-    datosAltitud = fopen(path, "r");
-    if (datosAltitud != NULL) {
-      printf("El archivo existe! \n");
-      i = 0;
-      while ((fgets(buff, 1000, datosAltitud) != NULL) && (i < filas)) {
-        // Toma una linea completa y convierte en token, sabemos que son
-        // dos por línea así que acá no se extraen más que ese número.
-        tok = strtok(buff, ",");
-        puntos[i].x = atol(tok);
-        tok = strtok(NULL, ",");
-        puntos[i].y = atol(tok);
-        i += 1;
-      }
-      printf("Archivo leido correctamente.\n");
-      error = 0;
-    } else {
-      printf("\n** ERROR: El archivo mno existe, o hubo problemas con el "
-             "archivo **\n");
-      error = 1;
+
+  if (cratersPositionFile = fopen(path, "r")) {
+    printf("\nLeyendo posición de los crátetes...");
+    int i = 0;
+    while ((fgets(lineBuffer, 1000, cratersPositionFile) != NULL) &&
+           (i < numberOfCraters)) {
+      token = strtok(lineBuffer, ",");
+      craterPositions[i].x = atol(token);
+      token = strtok(NULL, ",");
+      craterPositions[i].y = atol(token);
+      i += 1;
     }
-    // cerrar el archivo
-    fclose(datosAltitud);
+    printf("\nArchivo leido correctamente.");
+    error = 0;
+
+  } else {
+    printf("\nERROR: Archivo con posición de los cráteres no encontrado!");
+    error = 1;
   }
-  return (error);
-  // falta un mecanismo para impedir vectores mas grandes que el número de
-  // cráteres.
+  fclose(cratersPositionFile);
+  return error;
 }
 
 // función para leer las altitudes de los puntos de la matriz de un archivo de
@@ -963,7 +950,7 @@ int main(int argc, char *argv[]) {
   // al tener el número de crateres se puede crear el puntero que representa el
   // conjunto de estos.
   crateres = (point2D *)malloc(puntosCrater * sizeof(point2D));
-  leerArchivoPuntos(s_path, puntosCrater, crateres);
+  readCratersPositionFile(s_path, puntosCrater, crateres);
   // codigo de prueba:
   /*printf("Test de los puntos de salida de lava\n\n");
   for (i = 0; i < puntosCrater; ++i) {

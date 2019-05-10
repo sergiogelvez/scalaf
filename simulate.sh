@@ -2,12 +2,12 @@
 
 # Simulation Parameters
 eruption_temperature=1500
-eruption_rate=0.15
+eruption_rate=100
 cell_width=1
 map_rows=1024
 map_columns=1024
 number_of_craters=1
-time_steps=10000
+time_steps=10
 
 # Config Parameters
 ARCH_EXEC=build/scalaf
