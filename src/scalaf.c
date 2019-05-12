@@ -48,8 +48,8 @@ int readCratersPositionFile(char *path, int numberOfCraters,
   char *token;
   int error;
 
+  printf("\nLeyendo posición de los crátetes...");
   if (cratersPositionFile = fopen(path, "r")) {
-    printf("\nLeyendo posición de los crátetes...");
     int i = 0;
     while ((fgets(lineBuffer, 1000, cratersPositionFile) != NULL) &&
            (i < numberOfCraters)) {
@@ -59,72 +59,60 @@ int readCratersPositionFile(char *path, int numberOfCraters,
       craterPositions[i].y = atol(token);
       i += 1;
     }
-    printf("\nArchivo leido correctamente.");
-    error = 0;
+    printf("\n\t-Cráteres creados correctamente.");
+    fclose(cratersPositionFile);
+    return 1;
 
   } else {
     printf("\nERROR: Archivo con posición de los cráteres no encontrado!");
-    error = 1;
+    return 0;
   }
-  fclose(cratersPositionFile);
-  return error;
 }
 
-// función para leer las altitudes de los puntos de la matriz de un archivo de
-// texto plano (las altitudes vienen directamente en un arreglo de dos
-// dimensiones que representa la posición de dichas altitudes en la matriz)
-int leerArchivoTexto_Matriz(char *path, int filas, int columnas,
-                            celda *matriz) {
-  size_t sizep;
-  char buff[8192];
-  char *tok;
-  long int i, j;
+// Función para inicializar los valores en las celdas del terreno,
+// las altitudes del terreno se leen desde un archivo de texto plano
+// y los demás valores en la celda son asignados por defecto.
+int readTerrainFile(char *path, int maxRows, int maxColumns, celda *map) {
+  FILE *mapAltitudesFile;
+  char lineBuffer[8192];
+  char *token;
   int error;
-  double elem;
-  FILE *datosAltitud;
-  sizep = strlen(path);
-  if (sizep != 0) {
-    printf("\nIntentando leer el archivo de altitudes...\n", path);
-    printf("Archivo a leer: %s\n", path);
-    datosAltitud = fopen(path, "r");
-    if (datosAltitud != NULL) {
-      printf("El archivo existe! \n");
-      i = 0;
-      while (fgets(buff, 1000, datosAltitud) != NULL) {
-        // Toma una linea completa y convierte en token
-        j = 0;
-        tok = strtok(buff, ",");
-        while (tok) {
-          if (j < columnas) {
-            elem = atof(tok);
-            matriz[i * columnas + j].altitude = elem;
-            // acá se aprovecha para llenar todo de 0
-            // en las demás casillas.
-            matriz[i * columnas + j].thickness = 0;
-            matriz[i * columnas + j].isVent = 0;
-            matriz[i * columnas + j].temperature = 273.0;
-            matriz[i * columnas + j].yield = 0.0;
-            matriz[i * columnas + j].viscosity = 0.0;
-            matriz[i * columnas + j].exits = 0;
-            j += 1;
-          }
-          tok = strtok(NULL, ",");
+  int i, j;
+  double altitudeValue;
+
+  if (mapAltitudesFile = fopen(path, "r")) {
+    printf("\nLeyendo mapa de alturas del terreno...");
+    i = 0;
+    // Lee una linea completa y convierte en token.
+    // Inicializa todos los valores en cada celda.
+    while (fgets(lineBuffer, 1000, mapAltitudesFile) != NULL) {
+      j = 0;
+      token = strtok(lineBuffer, ",");
+      while (token) {
+        if (j < maxColumns) {
+          altitudeValue = atof(token);
+          map[i * maxColumns + j].altitude = altitudeValue;
+          map[i * maxColumns + j].thickness = 0;
+          map[i * maxColumns + j].isVent = 0;
+          map[i * maxColumns + j].temperature = 273.0;
+          map[i * maxColumns + j].yield = 0.0;
+          map[i * maxColumns + j].viscosity = 0.0;
+          map[i * maxColumns + j].exits = 0;
+          j += 1;
         }
-        if (j >= columnas) {
-          i += 1;
-        }
+        token = strtok(NULL, ",");
       }
-      printf("Archivo leido correctamente.\n");
-      error = 0;
-    } else {
-      printf("\n** ERROR: El archivo mno existe, o hubo problemas con el "
-             "archivo **\n");
-      error = 1;
+      if (j >= maxColumns) {
+        i += 1;
+      }
     }
-    // cerrar el archivo
-    fclose(datosAltitud);
+    printf("\n\t- Terreno inicializado correctamente.");
+    fclose(mapAltitudesFile);
+    return 1;
+  } else {
+    printf("\nERROR: Mapa de alturas no encontrado!");
+    return 0;
   }
-  return (error);
 }
 
 // función para imprimir fila a fila, columna por columna los valores de
@@ -864,6 +852,7 @@ int main(int argc, char *argv[]) {
   char a_path[1024];
   char etiqueta[1024];
   char path[1024];
+
   // acá revisamos los parámetros
   /*if(argc<21) {
           printf("Numero de parámetros incorrecto\n");
@@ -946,51 +935,44 @@ int main(int argc, char *argv[]) {
   resultCalc =
       (celda *)malloc((c0.tFilas + 2) * (c0.tColumnas + 2) * sizeof(celda));
   resultPoint2 = (celda *)malloc(c0.tFilas * c0.tColumnas * sizeof(celda));
-  leerArchivoTexto_Matriz(a_path, c0.tFilas, c0.tColumnas, testPoint);
-  // al tener el número de crateres se puede crear el puntero que representa el
-  // conjunto de estos.
-  crateres = (point2D *)malloc(puntosCrater * sizeof(point2D));
-  readCratersPositionFile(s_path, puntosCrater, crateres);
-  // codigo de prueba:
-  /*printf("Test de los puntos de salida de lava\n\n");
-  for (i = 0; i < puntosCrater; ++i) {
-          printf("Punto %d, x=%d y=%d\n", i, crateres[i].x, crateres[i].y );
-  }*/
-  placeCraters(testPoint, crateres, c0.tFilas, c0.tColumnas, puntosCrater);
-  // printf("\n\n\n Primera matriz \n");
-  // imprimirMatrizPantalla(c0.tFilas , c0.tColumnas, testPoint, 3);
-  /*printf("\n test de la viscosidad\n\n");
-  for (i=0; i< 2000; i+=100) {
-          printf("%lf %lf\n",i+500.0, visc(i+500.0));
+
+  // Leer el mapa de alturas
+  if (readTerrainFile(a_path, c0.tFilas, c0.tColumnas, testPoint)) {
+    // Crear puntero a todos los cráteres y leer archivo de posición de estos.
+    crateres = (point2D *)malloc(puntosCrater * sizeof(point2D));
+    if (readCratersPositionFile(s_path, puntosCrater, crateres)) {
+      placeCraters(testPoint, crateres, c0.tFilas, c0.tColumnas, puntosCrater);
+      preFuncion(c0.tFilas, c0.tColumnas, testPoint, resultPoint);
+
+      for (i = 0; i < c0.nPasos; i++) {
+        printf("\n\nPaso de Tiempo %d: \n\n", i);
+        FuncionPrincipal(c0.tFilas + 2, c0.tColumnas + 2, resultPoint,
+                         resultCalc);
+        // imprimirMatrizPantalla_2(c0.tFilas+2, c0.tColumnas+2, resultCalc, 3);
+        flag = obtenerPath(path);
+        strcat(path, "/");
+        strcat(path, etiqueta);
+        strcat(path, "_");
+        // poner el path
+        if (!(flag)) {
+          if (i % 5 == 0) {
+            prepararVisualizacionGNUPlot_2(i, path, c0.tFilas + 2,
+                                           c0.tColumnas + 2, resultCalc, 3,
+                                           c0.anchoCelda, 0, 0);
+          }
+        } else {
+          printf("Problemas con el path\n");
+        }
+        memcpy(resultPoint, resultCalc,
+               (c0.tFilas + 2) * (c0.tColumnas + 2) * sizeof(celda));
+      }
+      postFuncion(c0.tFilas + 2, c0.tColumnas + 2, resultCalc, resultPoint2);
+    }
   }
-  printf("\n test del yield \n\n");
-  for (i=0; i< 2000; i+=100) {
-          printf("%lf %lf\n",i+500.0, yield(i+500.0));
-  }*/
+
   // fin codigo de prueba;
   // place-holders de las funciones del flujo de agrandar reducir
-  preFuncion(c0.tFilas, c0.tColumnas, testPoint, resultPoint);
-  for (i = 0; i < c0.nPasos; i++) {
-    printf("\n\nPaso de Tiempo %d: \n\n", i);
-    FuncionPrincipal(c0.tFilas + 2, c0.tColumnas + 2, resultPoint, resultCalc);
-    // imprimirMatrizPantalla_2(c0.tFilas+2, c0.tColumnas+2, resultCalc, 3);
-    flag = obtenerPath(path);
-    strcat(path, "/");
-    strcat(path, etiqueta);
-    strcat(path, "_");
-    // poner el path
-    if (!(flag)) {
-      if (i % 5 == 0) {
-        prepararVisualizacionGNUPlot_2(i, path, c0.tFilas + 2, c0.tColumnas + 2,
-                                       resultCalc, 3, c0.anchoCelda, 0, 0);
-      }
-    } else {
-      printf("Problemas con el path\n");
-    }
-    memcpy(resultPoint, resultCalc,
-           (c0.tFilas + 2) * (c0.tColumnas + 2) * sizeof(celda));
-  }
-  postFuncion(c0.tFilas + 2, c0.tColumnas + 2, resultCalc, resultPoint2);
+
   // place-holder de la funcion de escribir gnuplot
   // flag = prepararVisualizacionGNUPlot(1, "/home/sergio/salida1", MAX_ROWS,
   // MAX_COLS, test, 3, 1, 0, 0); printf("%d",flag); fin del programa
