@@ -115,74 +115,6 @@ int readTerrainFile(char *path, int maxRows, int maxColumns, celda *map) {
   }
 }
 
-// función para imprimir fila a fila, columna por columna los valores de
-// altitud, temperatura, grosor de la capa de lava, existencia o no de crater
-// y otros de cada celda de la matriz. Es esencialmente una función para
-// pruebas.
-void imprimirMatrizPantalla(int filas, int columnas, const celda *matriz,
-                            int cifrasSignif) {
-  /*	función para imprimir toda la matriz en pantalla, para propositos de
-   *	de depuración. */
-  int i, j;
-  double elem = 0.0;
-  printf("\n");
-  for (i = 0; i < filas; ++i) {
-    printf("\nFila %d\n", i);
-    for (j = 0; j < columnas; j++) {
-      elem = matriz[columnas * i + j].altitude;
-      printf("COL %d - alt: %4.2lf,", j, elem);
-      elem = matriz[columnas * i + j].temperature;
-      printf("temp: %4.2lf,", elem);
-      elem = matriz[columnas * i + j].thickness;
-      printf("tck: %4.2lf,", elem);
-      elem = matriz[columnas * i + j].viscosity;
-      printf("visc: %4.2lf,", elem);
-      elem = matriz[columnas * i + j].yield;
-      printf("yield: %4.2lf\t", elem);
-      elem = matriz[columnas * i + j].exits;
-      printf("exits: %4.2lf\t", elem);
-      if (matriz[i * columnas + j].isVent == 1) {
-        printf(" cráter!! ");
-      }
-      // se pueden agregar acá más propiedades si se requiere.
-    }
-    printf("\n");
-  }
-}
-
-// Esta es la versión de imprimir pantalla que sirve con la matriz agrandada
-// directamente
-void imprimirMatrizPantalla_2(int filas, int columnas, const celda *matriz,
-                              int cifrasSignif) {
-  /*	función para imprimir toda la matriz en pantalla, para propositos de
-   *	de depuración. */
-  int i, j;
-  double elem = 0.0;
-  printf("\n");
-  for (i = 1; i < (filas - 1); ++i) {
-    printf("\nFila %d\n", i - 1);
-    for (j = 1; j < (columnas - 1); j++) {
-      elem = matriz[columnas * i + j].altitude;
-      printf("COL %d - alt: %4.2lf,", j - 1, elem);
-      elem = matriz[columnas * i + j].temperature;
-      printf("temp: %4.2lf,", elem);
-      elem = matriz[columnas * i + j].thickness;
-      printf("tck: %4.8lf,", elem);
-      elem = matriz[columnas * i + j].viscosity;
-      printf("visc: %4.2lf,", elem);
-      elem = matriz[columnas * i + j].yield;
-      printf("yield: %4.2lf\t", elem);
-      elem = matriz[columnas * i + j].exits;
-      printf("exits: %4.2lf\t", elem);
-      if (matriz[i * columnas + j].isVent == 1) {
-        printf(" cráter!! ");
-      }
-      // se pueden agregar acá más propiedades si se requiere.
-    }
-    printf("\n");
-  }
-}
-
 /*  La función prefunción "agranda" la matriz, colocando una fila y una
         columna al principio y al final (la matriz tiene dimensiones (MAX_ROWS
         +2)*(MAX_COLS+2). De antemano me disculpo por la cantidad de veces que
@@ -948,7 +880,6 @@ int main(int argc, char *argv[]) {
         printf("\n\nPaso de Tiempo %d: \n\n", i);
         FuncionPrincipal(c0.tFilas + 2, c0.tColumnas + 2, resultPoint,
                          resultCalc);
-        // imprimirMatrizPantalla_2(c0.tFilas+2, c0.tColumnas+2, resultCalc, 3);
         flag = obtenerPath(path);
         strcat(path, "/");
         strcat(path, etiqueta);
